@@ -34,7 +34,7 @@ A local Sonar run requires `SONAR_TOKEN`, `SONAR_ORGANIZATION`, and `SONAR_PROJE
 
 ## GitHub setup
 
-Import the repository in [SonarQube Cloud](https://sonarcloud.io/) as a CI-based analysis project with PR analysis enabled. Disable automatic analysis for that project. Enable secretless GitHub Actions analysis for the SonarQube Cloud organization and bind this repository to the project. In CI the official authentication action resolves the project and organization and gives the Maven scanner a short-lived token through a step output. Set the optional `SONAR_PROJECT_KEY` Actions variable if the repository is bound to multiple projects. Set `SONAR_REGION=us` for a US project.
+Import the repository in [SonarQube Cloud](https://sonarcloud.io/) as a CI-based analysis project with PR analysis enabled. Disable automatic analysis for that project. Enable secretless GitHub Actions analysis for the SonarQube Cloud organization and bind this repository to the project. In CI the official authentication action resolves the project and organization and gives the Maven scanner a short-lived token through a step output. Set the optional `SONAR_PROJECT_KEY` Actions variable if the repository is bound to multiple projects. Set `SONAR_REGION=us` for a US project or `SONAR_REGION=au` for an Australian project.
 
 Protect `main` with a required PR, approval, branch up-to-date checks, and the **Verify** job from **Secure CI** as a required status. Restrict direct pushes, force pushes, deletions, and bypass. Require code-owner review of the workflow and verification code as supported by the repository. Only set the Actions variable `GHCR_PUBLISH_ENABLED=true` after confirming these settings and GHCR package access. Publishing also checks GitHub's protected-ref flag.
 

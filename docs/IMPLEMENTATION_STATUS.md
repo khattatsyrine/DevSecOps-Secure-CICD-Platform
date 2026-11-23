@@ -36,3 +36,9 @@ The migration PR targets Spring Boot 4.0.10 with Spring MVC 7.0.11 and Tomcat 11
 GitHub Actions passed Gitleaks, Maven, the image build, Trivy with zero blocking findings, and the scanned-image runtime suite. The Trivy and Compose records carry the same image ID. The passive ZAP report retained one low-risk finding for a missing content-type options header. Prometheus, Grafana and Alertmanager webhook delivery passed. [Hosted run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45263551266) · [Verification artifact](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45263551266/artifacts/14861528763)
 
 The migration remains on its review branch while the mandatory Sonar check is blocked. GitHub returned HTTP 403 for private-main protection and listed zero repository Actions secrets and variables. GHCR publishing remains gated by successful verification and protected main.
+
+## SonarQube Cloud OIDC
+
+The existing Verify job grants `id-token: write` and uses the pinned official SonarSource authentication action. The short-lived token is passed only to the Maven analysis step. Maven still waits for the Quality Gate, and publish permissions remain in the separate GHCR job.
+
+The hosted OIDC action resolved project `khattatsyrine_DevSecOps-Secure-CICD-Platform`. SonarQube Cloud denied the exchange because organization `khattatsyrine` has secretless GitHub Actions analysis disabled. An organization administrator must enable it under Administration → Organization settings → Analysis. The Quality Gate step was skipped after authentication failed. [Hosted run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45273369866) · [Official action prerequisites](https://github.com/SonarSource/sonarqube-auth-action#1-prerequisites)
