@@ -30,15 +30,15 @@ $id = docker image inspect --format '{{.Id}}' $env:APP_IMAGE
 ./scripts/runtime.ps1 -ImageId $id
 ```
 
-Sonar requires `SONAR_TOKEN`, `SONAR_ORGANIZATION`, and `SONAR_PROJECT_KEY` in the process environment. Use your approved secret store for the token. On Linux, run Maven with `./mvnw`. The other commands are the same inside PowerShell 7. Security and runtime results go to the ignored `evidence/` directory. The runtime check creates and removes a separate Compose project and exercises a controlled outage to verify alert delivery.
+A local Sonar run requires `SONAR_TOKEN`, `SONAR_ORGANIZATION`, and `SONAR_PROJECT_KEY` in the process environment. Use your approved secret store for the token. On Linux, run Maven with `./mvnw`. The other commands are the same inside PowerShell 7. Security and runtime results go to the ignored `evidence/` directory. The runtime check creates and removes a separate Compose project and exercises a controlled outage to verify alert delivery.
 
 ## GitHub setup
 
-Import the repository in [SonarQube Cloud](https://sonarcloud.io/) as a CI-based analysis project with PR analysis enabled. Disable automatic analysis for that project. Store the scoped analysis token as a GitHub Actions secret named `SONAR_TOKEN` and set the Actions variables `SONAR_ORGANIZATION` and `SONAR_PROJECT_KEY`.
+Import the repository in [SonarQube Cloud](https://sonarcloud.io/) as a CI-based analysis project with PR analysis enabled. Disable automatic analysis for that project. Enable secretless GitHub Actions analysis for the SonarQube Cloud organization and bind this repository to the project. In CI the official authentication action resolves the project and organization and gives the Maven scanner a short-lived token through a step output. Set the optional `SONAR_PROJECT_KEY` Actions variable if the repository is bound to multiple projects. Set `SONAR_REGION=us` for a US project.
 
 Protect `main` with a required PR, approval, branch up-to-date checks, and the **Verify** job from **Secure CI** as a required status. Restrict direct pushes, force pushes, deletions, and bypass. Require code-owner review of the workflow and verification code as supported by the repository. Only set the Actions variable `GHCR_PUBLISH_ENABLED=true` after confirming these settings and GHCR package access. Publishing also checks GitHub's protected-ref flag.
 
-Fork PRs run with read-only permissions and without Sonar credentials. After review, a maintainer can cherry-pick the reviewed changes to a branch in this repository and open a replacement PR. The replacement runs the Quality Gate with credentials. Merge eligibility stays blocked on the fork PR.
+Fork PRs run with read-only permissions and without Sonar credentials. GitHub limits OIDC to the verification job on trusted events. After review, a maintainer can cherry-pick the reviewed changes to a branch in this repository and open a replacement PR. The replacement runs the Quality Gate with credentials. Merge eligibility stays blocked on the fork PR.
 
 ## Troubleshooting
 
