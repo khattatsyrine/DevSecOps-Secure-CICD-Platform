@@ -1,0 +1,9 @@
+title = "Democyber secret policy"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "democyber-synthetic-credential"
+description = "Synthetic credential used to demonstrate the verification gate"
+regex = '''DEMO_SCAN_[A-Z0-9]{24}'''
+keywords = ["DEMO_SCAN_"]

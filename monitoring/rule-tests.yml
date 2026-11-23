@@ -1,0 +1,20 @@
+rule_files:
+  - rules/democyber.yml
+evaluation_interval: 5s
+tests:
+  - interval: 5s
+    input_series:
+      - series: 'up{job="democyber",instance="app:8080"}'
+        values: '1 0 0 0 1'
+    alert_rule_test:
+      - eval_time: 10s
+        alertname: DemocyberDown
+        exp_alerts: []
+      - eval_time: 15s
+        alertname: DemocyberDown
+        exp_alerts:
+          - exp_labels: {job: democyber, instance: "app:8080", severity: critical}
+            exp_annotations: {summary: Prometheus cannot scrape Democyber}
+      - eval_time: 20s
+        alertname: DemocyberDown
+        exp_alerts: []

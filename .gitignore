@@ -1,0 +1,9 @@
+target/
+.env
+.env.*
+!.env.example
+.tools/
+.m2-local/
+evidence/
+.idea/
+.vscode/

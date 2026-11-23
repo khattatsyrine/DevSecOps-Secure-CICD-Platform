@@ -1,0 +1,10 @@
+groups:
+  - name: democyber
+    rules:
+      - alert: DemocyberDown
+        expr: up{job="democyber"} == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: Prometheus cannot scrape Democyber
