@@ -22,7 +22,7 @@ try {
                 --mount "type=bind,source=$root/security/gitleaks.toml,target=/policy.toml,readonly" `
                 --mount "type=bind,source=$work,target=/output" `
                 ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f git --config /policy.toml --redact=100 --no-banner `
-                --report-format json --report-path /output/gitleaks.json --exit-code 10 /repo *> "$work/gitleaks.log"
+                --log-opts '--full-history --diff-merges=first-parent HEAD' --report-format json --report-path /output/gitleaks.json --exit-code 10 /repo *> "$work/gitleaks.log"
             $code = $LASTEXITCODE
         } finally {
             $PSNativeCommandUseErrorActionPreference = $true
@@ -54,11 +54,21 @@ try {
         '--mount', "type=bind,source=$root/security/.trivyignore,target=/policy/ignore,readonly"
     )
     $trivy = 'ghcr.io/aquasecurity/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb'
-    docker run --rm @mounts $trivy image --timeout 10m --no-progress --java-db-repository ghcr.io/aquasecurity/trivy-java-db:1 --java-db-repository mirror.gcr.io/aquasec/trivy-java-db:1 --input /candidate/candidate.tar `
+    $imageOptions = @(
+        'image', '--timeout', '10m', '--no-progress',
+        '--java-db-repository', 'ghcr.io/aquasecurity/trivy-java-db:1',
+        '--java-db-repository', 'mirror.gcr.io/aquasec/trivy-java-db:1',
+        '--input', '/candidate/candidate.tar'
+    )
+    docker run --rm @mounts $trivy @imageOptions `
         --format cyclonedx --output /evidence/sbom.cdx.json
+    $sbom = Get-Content -LiteralPath "$evidence/sbom.cdx.json" -Raw | ConvertFrom-Json
+    if ($sbom.bomFormat -cne 'CycloneDX' -or -not $sbom.metadata.component) {
+        throw 'Trivy did not produce a valid CycloneDX image inventory.'
+    }
     $PSNativeCommandUseErrorActionPreference = $false
     try {
-        docker run --rm @mounts $trivy image --timeout 10m --no-progress --java-db-repository ghcr.io/aquasecurity/trivy-java-db:1 --java-db-repository mirror.gcr.io/aquasec/trivy-java-db:1 --input /candidate/candidate.tar --scanners vuln `
+        docker run --rm @mounts $trivy @imageOptions --scanners vuln `
             --severity HIGH,CRITICAL --ignorefile /policy/ignore --exit-code 10 `
             --format json --output /evidence/trivy.json
         $code = $LASTEXITCODE

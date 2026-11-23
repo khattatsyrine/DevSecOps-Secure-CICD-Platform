@@ -9,15 +9,17 @@ Set-Location (Join-Path $PSScriptRoot '..')
 $root = (Get-Location).Path
 if (-not $env:APP_IMAGE) { throw 'APP_IMAGE is required.' }
 $project = 'democyber-verify-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
-$env:COMPOSE_PROJECT_NAME = $project
-$env:GRAFANA_ADMIN_PASSWORD = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(24))
+$previousProject = $env:COMPOSE_PROJECT_NAME
+$previousPassword = $env:GRAFANA_ADMIN_PASSWORD
 $zap = "$project-zap"
 $zapCreated = $false
 New-Item -ItemType Directory -Force evidence | Out-Null
 
 try {
+    $env:COMPOSE_PROJECT_NAME = $project
+    $env:GRAFANA_ADMIN_PASSWORD = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(24))
     docker compose config --quiet
-    docker compose pull --ignore-buildable prometheus alertmanager grafana receiver
+    docker compose pull --policy missing prometheus alertmanager grafana receiver
     docker compose run --rm --no-deps --entrypoint /bin/promtool prometheus check config /etc/prometheus/prometheus.yml
     docker compose run --rm --no-deps --entrypoint /bin/amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
     docker run --rm --entrypoint /bin/promtool --mount "type=bind,source=$root/monitoring,target=/rules,readonly" `
@@ -67,6 +69,11 @@ try {
     try {
         if ($zapCreated) { docker rm -f $zap | Out-Null }
     } finally {
-        docker compose down --volumes --remove-orphans
+        try {
+            docker compose down --volumes --remove-orphans
+        } finally {
+            $env:COMPOSE_PROJECT_NAME = $previousProject
+            $env:GRAFANA_ADMIN_PASSWORD = $previousPassword
+        }
     }
 }
