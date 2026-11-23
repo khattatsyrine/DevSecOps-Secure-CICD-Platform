@@ -22,6 +22,7 @@ jobs:
     parameters:
       maxDuration: 2
   - type: report
+    alwaysRun: true
     parameters:
       template: traditional-json
       reportDir: /tmp
@@ -29,7 +30,5 @@ jobs:
   - type: exitStatus
     parameters:
       errorLevel: Medium
-      warnLevel: Low
       okExitValue: 0
       errorExitValue: 1
-      warnExitValue: 0

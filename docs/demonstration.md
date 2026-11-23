@@ -15,4 +15,4 @@ See [implementation status](IMPLEMENTATION_STATUS.md) for observed results. Use 
 | Approved protected main | Verify passes and GHCR receives the checked image. The job records the registry digest and source commit. |
 | Failed main verification | Publish to GHCR is skipped. |
 | Local Compose | App, Prometheus, Grafana and Alertmanager respond. The receiver proof records a firing notification. |
-| Image preservation | Inspect runtime evidence, release JSON and the registry manifest. The local scanned, container, loaded and manifest configuration IDs match. |
+| Image preservation | Inspect runtime evidence, release JSON and the registry manifest. The local scanned, container and loaded image IDs match. The registry manifest configuration digest matches the configuration in the archive. |

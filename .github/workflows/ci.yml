@@ -136,7 +136,10 @@ jobs:
           digest=$(sed -nE "s/^[^ ]+: digest: (sha256:[0-9a-f]{64}) size: [0-9]+$/\1/p" "$RUNNER_TEMP/ghcr-push.log")
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           docker buildx imagetools inspect --raw "$image@$digest" > checked/manifest.json
-          [[ "$(jq -er '.config.digest' checked/manifest.json)" == "$(jq -er '.imageId' checked/metadata.json)" ]]
+          config_path=$(tar -xOf checked/image.tar manifest.json | jq -er 'if length == 1 then .[0].Config else error("expected one image") end')
+          [[ "$config_path" =~ ^(blobs/sha256/[0-9a-f]{64}|[0-9a-f]{64}\.json)$ ]]
+          config_sha=$(tar -xOf checked/image.tar "$config_path" | sha256sum | cut -d' ' -f1)
+          [[ "$(jq -er '.config.digest' checked/manifest.json)" == "sha256:$config_sha" ]]
           jq --arg image "$tag" --arg digest "$digest" \
             '. + {registryImage: $image, registryDigest: $digest}' checked/metadata.json > checked/release.json
           printf 'Image `%s@%s`\n\nSource commit `%s`\n' "$image" "$digest" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

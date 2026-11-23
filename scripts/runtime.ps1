@@ -1,7 +1,6 @@
 #Requires -Version 7.3
 param(
     [Parameter(Mandatory)][ValidatePattern('^sha256:[a-f0-9]{64}$')][string]$ImageId,
-    [switch]$SkipDown,
     [ValidateSet('None', 'Scrape', 'Delivery')][string]$FailureFixture = 'None'
 )
 $ErrorActionPreference = 'Stop'
@@ -62,6 +61,9 @@ try {
         throw 'Image ID changed after restart.'
     }
 } finally {
-    if ($zapCreated) { docker rm -f $zap | Out-Null }
-    if (-not $SkipDown) { docker compose down --volumes --remove-orphans }
+    try {
+        if ($zapCreated) { docker rm -f $zap | Out-Null }
+    } finally {
+        docker compose down --volumes --remove-orphans
+    }
 }

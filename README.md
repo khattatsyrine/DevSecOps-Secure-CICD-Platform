@@ -24,7 +24,7 @@ $env:APP_IMAGE = "democyber:local-verify"
 ./scripts/scan.ps1 -Mode Source
 .\mvnw.cmd -B -ntp clean verify
 ./scripts/sonar.ps1
-docker build --tag $env:APP_IMAGE .
+docker build --provenance=false --sbom=false --tag $env:APP_IMAGE .
 $id = docker image inspect --format '{{.Id}}' $env:APP_IMAGE
 ./scripts/scan.ps1 -Mode Image -ImageId $id
 ./scripts/runtime.ps1 -ImageId $id
