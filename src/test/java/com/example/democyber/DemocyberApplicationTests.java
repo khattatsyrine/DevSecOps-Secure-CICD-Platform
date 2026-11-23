@@ -29,7 +29,8 @@ class DemocyberApplicationTests {
         mvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.components").doesNotExist());
+                .andExpect(jsonPath("$.components").doesNotExist())
+                .andExpect(jsonPath("$.groups").doesNotExist());
     }
 
     @Test
