@@ -41,6 +41,11 @@ switch (process.argv[2]) {
     });
     break;
   }
+  case 'scrape-down':
+    await until('Prometheus scrape failure fixture', timeout, async () => {
+      assert.ok((await query('up' + job)).some(entry => entry.value[1] === '0'));
+    });
+    break;
   case 'alert': {
     assert.match(project || '', /^[a-z0-9][a-z0-9_-]*$/);
     await until('Prometheus firing rule and Alertmanager receipt', timeout, async () => {
@@ -58,5 +63,5 @@ switch (process.argv[2]) {
     break;
   }
   default:
-    throw new Error('Expected metrics or alert');
+    throw new Error('Expected metrics, scrape-down, or alert');
 }

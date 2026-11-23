@@ -33,6 +33,7 @@ jobs:
           java-version: '21'
           overwrite-settings: false
       - name: Build and run JUnit tests
+        id: maven
         run: ./mvnw -B -ntp clean verify
       - name: Enforce SonarQube Cloud Quality Gate
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -43,6 +44,7 @@ jobs:
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
         run: ./scripts/sonar.ps1
       - name: Build the candidate once
+        if: ${{ !cancelled() && steps.maven.outcome == 'success' }}
         id: candidate
         run: |
           set -euo pipefail
@@ -51,11 +53,14 @@ jobs:
             --tag "$APP_IMAGE" .
           printf 'id=%s\n' "$(docker image inspect --format '{{.Id}}' "$APP_IMAGE")" >> "$GITHUB_OUTPUT"
       - name: Generate the SBOM and enforce Trivy policy
+        id: trivy
+        if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
         shell: pwsh
         env:
           VERIFIED_IMAGE_ID: ${{ steps.candidate.outputs.id }}
         run: ./scripts/scan.ps1 -Mode Image -ImageId $env:VERIFIED_IMAGE_ID
       - name: Verify the scanned image in disposable Compose
+        if: ${{ !cancelled() && steps.trivy.outcome == 'success' }}
         shell: pwsh
         env:
           VERIFIED_IMAGE_ID: ${{ steps.candidate.outputs.id }}

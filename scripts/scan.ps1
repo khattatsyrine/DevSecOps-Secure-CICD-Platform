@@ -54,11 +54,11 @@ try {
         '--mount', "type=bind,source=$root/security/.trivyignore,target=/policy/ignore,readonly"
     )
     $trivy = 'ghcr.io/aquasecurity/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb'
-    docker run --rm @mounts $trivy image --timeout 10m --input /candidate/candidate.tar `
+    docker run --rm @mounts $trivy image --timeout 10m --no-progress --java-db-repository ghcr.io/aquasecurity/trivy-java-db:1 --java-db-repository mirror.gcr.io/aquasec/trivy-java-db:1 --input /candidate/candidate.tar `
         --format cyclonedx --output /evidence/sbom.cdx.json
     $PSNativeCommandUseErrorActionPreference = $false
     try {
-        docker run --rm @mounts $trivy image --timeout 10m --input /candidate/candidate.tar --scanners vuln `
+        docker run --rm @mounts $trivy image --timeout 10m --no-progress --java-db-repository ghcr.io/aquasecurity/trivy-java-db:1 --java-db-repository mirror.gcr.io/aquasec/trivy-java-db:1 --input /candidate/candidate.tar --scanners vuln `
             --severity HIGH,CRITICAL --ignorefile /policy/ignore --exit-code 10 `
             --format json --output /evidence/trivy.json
         $code = $LASTEXITCODE

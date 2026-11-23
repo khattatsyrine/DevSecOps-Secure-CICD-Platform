@@ -13,4 +13,4 @@ Verification date: 2026-11-23 (Africa/Lagos). Source was inspected read-only und
 | 7. GHCR | Blocked | The separate publish job is implemented. A passing required verification run, verified protection rules, and a checked registry push remain. |
 | 8. Full handover | Blocked | Architecture, reproducing steps and demonstration matrix are documented. Full acceptance depends on the unresolved checks above. |
 
-Local evidence is written under ignored `evidence/`. Maven results are under `target/surefire-reports/` and `target/site/jacoco/`. Github Actions is configured to retain sanitized verification summaries and scanner reports and to record the published digest after a successful release.
+Local evidence is written under ignored `evidence/`. Maven results are under `target/surefire-reports/` and `target/site/jacoco/`. GitHub Actions is configured to retain sanitized verification summaries and scanner reports and to record the published digest after a successful release.

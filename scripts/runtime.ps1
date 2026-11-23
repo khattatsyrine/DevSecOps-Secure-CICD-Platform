@@ -32,7 +32,7 @@ try {
 
     docker create --name $zap --network "${project}_default" `
         --mount "type=bind,source=$root/security/zap.yml,target=/zap/plan.yml,readonly" `
-        ghcr.io/zaproxy/zaproxy:2.17.0 zap.sh -cmd -autorun /zap/plan.yml | Out-Null
+        ghcr.io/zaproxy/zaproxy:2.17.0@sha256:9624669db72f54d86c4b46a7064518bd9bf79d8c61a4c31befa9923489f328af zap.sh -cmd -autorun /zap/plan.yml | Out-Null
     $zapCreated = $true
     $PSNativeCommandUseErrorActionPreference = $false
     try {
@@ -48,7 +48,10 @@ try {
         throw "ZAP passive verification failed (start $zapStart, policy $zapExit, report $zapCopy)."
     }
 
-    if ($FailureFixture -eq 'Scrape') { docker compose stop prometheus }
+    if ($FailureFixture -eq 'Scrape') {
+        docker compose stop app
+        node scripts/monitor.mjs scrape-down
+    }
     node scripts/monitor.mjs metrics
     'Prometheus metrics and Grafana dashboard/query passed' | Add-Content evidence/runtime.txt
     if ($FailureFixture -eq 'Delivery') { docker compose stop receiver }
