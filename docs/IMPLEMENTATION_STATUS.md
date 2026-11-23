@@ -20,3 +20,11 @@ Local evidence is under ignored `evidence/`. JUnit and JaCoCo results are under 
 The [hosted Trivy artifact](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45199035496/artifacts/14831835276) contains the baseline SBOM and vulnerability report. The [synthetic PR workflow](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45201899354) recorded Gitleaks failure, evidence upload, and skipped publishing.
 
 The [patched main run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45249327074) passed source scanning, Maven and image build. Sonar and Trivy failed and publishing was skipped. The [patched verification artifact](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45249327074/artifacts/14855505739) contains the SBOM and the remaining CVE-2026-47884 and CVE-2026-47890 findings.
+
+## Spring MVC finding review
+
+The rerun on commit `84317c7` passed Gitleaks, Maven and the image build. Sonar and Trivy failed. Hosted Compose and GHCR publishing were skipped. [GitHub Actions run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45252475265)
+
+Trivy used GitHub Advisory Database severity and rated both findings Critical. Spring rates CVE-2026-47884 Medium and CVE-2026-47890 Low. Static review of the application found a single greeting REST handler and no application-defined XSLT view or server-sent event rendering. That limits the observed exposure in the demo and leaves the dependency findings subject to the existing release gate. [Spring advisory 47884](https://spring.io/security/cve-2026-47884/) · [Spring advisory 47890](https://spring.io/security/cve-2026-47890/)
+
+A fresh Maven Central metadata check confirmed Spring Boot 3.5.16 and Spring MVC 6.2.19 as the latest public versions in their respective series. The compatible 6.2.20 fix requires Enterprise access. The public Framework 7 fix belongs on the Spring Boot 4 release line. [Spring Boot 3.5 requirements](https://docs.spring.io/spring-boot/3.5/system-requirements.html) · [Spring Boot 4 requirements](https://docs.spring.io/spring-boot/4.0/system-requirements.html)
