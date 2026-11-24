@@ -25,8 +25,8 @@ try {
     docker compose pull --policy missing prometheus alertmanager grafana receiver
     docker compose run --rm --no-deps --entrypoint /bin/promtool prometheus check config /etc/prometheus/prometheus.yml
     docker compose run --rm --no-deps --entrypoint /bin/amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
-    docker run --rm --entrypoint /bin/promtool --mount "type=bind,source=$root/monitoring,target=/rules,readonly" `
-        --workdir /rules prom/prometheus:v3.16.0 test rules rule-tests.yml
+    docker compose run --rm --no-deps --entrypoint /bin/promtool `
+        --volume "${root}/monitoring:/rules:ro" --workdir /rules prometheus test rules rule-tests.yml
 
     docker compose up -d --no-build --pull never
     $container = docker compose ps -q app
