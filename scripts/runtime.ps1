@@ -29,10 +29,16 @@ try {
         --volume "${root}/monitoring:/rules:ro" --workdir /rules prometheus test rules rule-tests.yml
 
     docker compose up -d --no-build --pull never
-    $container = docker compose ps -q app
+    $container = docker compose ps --all --quiet app
+    if (!$container) { throw 'Compose did not create an app container.' }
     $runningId = docker inspect --format '{{.Image}}' $container
     if ($runningId -cne $ImageId) { throw 'Compose image ID differs from the scanned image.' }
-    node scripts/smoke.mjs
+    try {
+        node scripts/smoke.mjs
+    } catch {
+        docker compose logs --no-color app
+        throw
+    }
 
     docker create --name $zap --network "${project}_default" `
         --mount "type=bind,source=$root/security/zap.yml,target=/zap/plan.yml,readonly" `
