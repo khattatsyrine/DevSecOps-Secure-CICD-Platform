@@ -46,12 +46,12 @@ Disposable Compose evidence now records success after the full run and cleanup. 
 - **Why upgrade to Spring Boot 4?** Trivy flagged two Spring MVC 6.2 findings after Jackson and Tomcat updates. The fixed public Framework line and supported Tomcat combination are available through Boot 4. The migration preserves the original endpoint contract.
 - **Why keep separate verification and publishing jobs?** Only the publisher gets package write access. Verification has repository read access and a scoped OIDC permission for Sonar. A failed Verify job blocks publishing.
 - **What does the ZAP result prove?** The application responded to the selected passive checks under the configured threshold. It is limited to those routes and passive rules.
-- **What remains before release?** The last completed PR rerun authenticated to Sonar and passed Trivy and Compose. Sonar rejected scanner analysis because Automatic Analysis was enabled for the project, so the CI Quality Gate stayed pending. GitHub returned HTTP 403 for protection on private `main`, and the GHCR opt-in variable is unset. PR #2 remains unmerged.
+- **What remains before release?** The review run passed the enforced Sonar Quality Gate. GitHub returned HTTP 403 for protection on private `main`, and the GHCR opt-in variable is unset. The protected-main release and registry digest remain unverified. PR #2 remains unmerged.
 
 ### Evidence to have open
 
 - [PR #2 and commit history](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/pull/2)
 - [Gitleaks negative fixture](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45201899354)
 - [Spring Boot 4 scan, SBOM and runtime artifact](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45263551266/artifacts/14861528763)
-- [Sonar OIDC rerun and independent checks](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45276672312/attempts/3)
+- [Hosted audit and Sonar Quality Gate](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45370932041)
 - [Architecture](architecture.md), [demo matrix](demonstration.md) and [implementation status](IMPLEMENTATION_STATUS.md)
