@@ -2,17 +2,17 @@
 
 See [implementation status](IMPLEMENTATION_STATUS.md) for observed results. Use temporary local Git history or reviewed test branches for negative cases. Keep those branches unmerged.
 
-| Scenario | Observable result |
-| --- | --- |
-| Valid same-repository PR | Verify passes and Publish to GHCR skips. |
-| Committed synthetic credential | Gitleaks fails with the synthetic rule and a sanitized report. Use a throwaway repository and the policy's fixture format. |
-| Known vulnerable candidate | Trivy reports HIGH or CRITICAL findings and fails before Compose and publishing. Use a disposable historical image purely for static analysis. |
-| Controlled code quality issue | Sonar Quality Gate fails. Use a disposable PR and a project gate with a known coverage condition. |
-| App unavailable | Set `APP_PORT` to an unused local port and run `node scripts/smoke.mjs`. The readiness check exits nonzero. |
-| API security regression | Serve an intentionally different HTTP contract in a disposable fixture. Returning HTTP 200 at `/actuator/env` must fail the smoke test. |
-| Prometheus scrape disrupted | Run `./scripts/runtime.ps1 -ImageId $id -FailureFixture Scrape`. The fixture waits for up=0 and the healthy metrics check fails. |
-| Receiver unavailable | Run `./scripts/runtime.ps1 -ImageId $id -FailureFixture Delivery`. The alert fires and the receiver proof fails. |
-| Approved protected main | Verify passes and GHCR receives the checked image. The job records the registry digest and source commit. |
-| Failed main verification | Publish to GHCR is skipped. |
-| Local Compose | App, Prometheus, Grafana and Alertmanager respond. The receiver proof records a firing notification. |
-| Image preservation | Inspect runtime evidence, release JSON and the registry manifest. The local scanned, container and loaded image IDs match. The registry manifest configuration digest matches the configuration in the archive. |
+| Scenario | How to reproduce or inspect | Observed result |
+| --- | --- | --- |
+| Valid same-repository PR | Verify passes and Publish to GHCR skips. | Verify passed and publishing skipped. [PR #2 run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45381652401) |
+| Committed synthetic credential | Gitleaks fails with the synthetic rule and a sanitized report. Use a throwaway repository and the policy's fixture format. | Gitleaks rejected the committed synthetic fixture and retained a sanitized report. [PR #1 run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45201899354) |
+| Known vulnerable candidate | Trivy reports HIGH or CRITICAL findings and fails before Compose and publishing. Use a disposable historical image purely for static analysis. | Trivy rejected the historical candidate with two blocking Spring MVC findings. [Historical main run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45249327074) |
+| Controlled code quality issue | Sonar Quality Gate fails. Use a disposable PR and a project gate with a known coverage condition. | The OIDC exchange and Maven build succeeded, then Sonar reported `QUALITY GATE STATUS: FAILED` on a disposable PR that added 27 uncovered lines. [PR #3 run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45389124122) |
+| App unavailable | Set `APP_PORT` to an unused local port and run `node scripts/smoke.mjs`. The readiness check exits nonzero. | The disposable PR used an image with a missing startup JAR. The Compose step failed and publishing skipped. The local regression rerun included the missing JAR in the diagnostic output. [PR #3 run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45389124122) |
+| API security regression | Serve an intentionally different HTTP contract in a disposable fixture. Returning HTTP 200 at `/actuator/env` must fail the smoke test. | An isolated Windows fixture exposed `/actuator/env` and the smoke assertion exited nonzero. See `evidence/smoke-security-regression.txt`. |
+| Prometheus scrape disrupted | Run `./scripts/runtime.ps1 -ImageId $id -FailureFixture Scrape`. The fixture waits for up=0 and the healthy metrics check fails. | Stopping the app drove the scrape target down and the same monitoring command used by CI exited nonzero on Windows. See `evidence/prometheus-scrape-negative.txt`. |
+| Receiver unavailable | Run `./scripts/runtime.ps1 -ImageId $id -FailureFixture Delivery`. The alert fires and the receiver proof fails. | Stopping the receiver caused the CI monitoring command to fail on Windows after it detected the alert in Prometheus and Alertmanager. See `evidence/alert-delivery-negative.txt`. |
+| Approved protected main | Verify passes and GHCR receives the checked image. The job records the registry digest and source commit. | Verify and Publish to GHCR both passed on the protected merge commit. [Release run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45388579014) |
+| Failed main verification | Publish to GHCR is skipped. | The failed historical main verification skipped publishing. [Historical main run](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45249327074) |
+| Local Compose | App, Prometheus, Grafana and Alertmanager respond. The receiver proof records a firing notification. | Windows Compose verified the app, live Grafana queries, Prometheus metrics, webhook delivery and recovery. See `evidence/final-windows-runtime.txt`. |
+| Image preservation | Inspect runtime evidence, release JSON and the registry manifest. The local scanned, container and loaded image IDs match. The registry manifest configuration digest matches the configuration in the archive. | The job verified the archive SHA-256 and the scanned, running and loaded image identity. Independent lookups by commit tag and digest confirmed the registry manifest. [Release metadata](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45388579014/artifacts/14917898134) |
