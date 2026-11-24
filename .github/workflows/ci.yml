@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 40
     permissions:
       contents: read
+      id-token: write
     env:
       APP_IMAGE: democyber:${{ github.sha }}
     steps:
@@ -35,13 +36,22 @@ jobs:
       - name: Build and run JUnit tests
         id: maven
         run: ./mvnw -B -ntp clean verify
+      - name: Authenticate to SonarQube Cloud with OIDC
+        id: sonar-auth
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: SonarSource/sonarqube-auth-action@b372e2c2930aadfcc4f4399446da1e12772709ad # v1.2
+        with:
+          export-env: 'false'
+          sonar-region: ${{ vars.SONAR_REGION || 'eu' }}
+          project-key: ${{ vars.SONAR_PROJECT_KEY }}
       - name: Enforce SonarQube Cloud Quality Gate
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         shell: pwsh
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
-          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_TOKEN: ${{ steps.sonar-auth.outputs.sonar-token }}
+          SONAR_ORGANIZATION: ${{ steps.sonar-auth.outputs.organization }}
+          SONAR_PROJECT_KEY: ${{ steps.sonar-auth.outputs.project-key }}
+          SONAR_REGION: ${{ steps.sonar-auth.outputs.sonar-region }}
         run: ./scripts/sonar.ps1
       - name: Build the candidate once
         if: ${{ !cancelled() && steps.maven.outcome == 'success' }}
