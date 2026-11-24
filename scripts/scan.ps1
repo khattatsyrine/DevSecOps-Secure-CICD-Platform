@@ -12,6 +12,16 @@ $evidence = (New-Item -ItemType Directory -Force evidence).FullName
 $work = (New-Item -ItemType Directory -Force ".tools/scan-$([Guid]::NewGuid().ToString('N'))").FullName
 
 try {
+    $previousReports = if ($Mode -eq 'Source') {
+        'gitleaks.json'
+    } else {
+        'sbom.cdx.json', 'trivy.json', 'scanned-image-id.txt'
+    }
+    foreach ($reportName in $previousReports) {
+        $reportPath = Join-Path $evidence $reportName
+        if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
+    }
+
     if ($Mode -eq 'Source') {
         $source = (Resolve-Path -LiteralPath $SourceDirectory).Path
         $PSNativeCommandUseErrorActionPreference = $false
@@ -77,6 +87,10 @@ try {
     }
     if ($code -eq 10) { throw 'Trivy rejected HIGH or CRITICAL findings. See evidence/trivy.json.' }
     if ($code -ne 0) { throw "Trivy execution failed (exit $code)." }
+    $report = Get-Content -LiteralPath "$evidence/trivy.json" -Raw | ConvertFrom-Json
+    if (-not $report.SchemaVersion -or -not $report.ArtifactName) {
+        throw 'Trivy did not produce a valid vulnerability report.'
+    }
     "$ImageId" | Set-Content "$evidence/scanned-image-id.txt"
     'Trivy passed and CycloneDX SBOM generated.'
 } finally {

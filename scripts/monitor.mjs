@@ -34,6 +34,7 @@ switch (process.argv[2]) {
     await until('Grafana dashboard and datasource query', timeout, async () => {
       const dashboard = await (await request(grafana + '/api/dashboards/uid/democyber', 200, options)).json();
       assert.equal(dashboard.dashboard.uid, 'democyber');
+      assert.ok(dashboard.dashboard.panels.length > 0, 'Expected a provisioned dashboard with panels');
       assert.ok(dashboard.dashboard.panels.every(panel => panel.datasource.uid === 'prometheus'));
       const proxied = await request(grafana + '/api/datasources/proxy/uid/prometheus/api/v1/query?query=' +
         encodeURIComponent('up' + job), 200, options);

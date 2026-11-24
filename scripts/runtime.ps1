@@ -14,6 +14,9 @@ $previousPassword = $env:GRAFANA_ADMIN_PASSWORD
 $zap = "$project-zap"
 $zapCreated = $false
 New-Item -ItemType Directory -Force evidence | Out-Null
+foreach ($report in 'evidence/runtime.txt', 'evidence/zap-passive.json') {
+    if (Test-Path -LiteralPath $report) { Remove-Item -LiteralPath $report }
+}
 
 try {
     $env:COMPOSE_PROJECT_NAME = $project
@@ -29,7 +32,6 @@ try {
     $container = docker compose ps -q app
     $runningId = docker inspect --format '{{.Image}}' $container
     if ($runningId -cne $ImageId) { throw 'Compose image ID differs from the scanned image.' }
-    "Compose image ID $runningId" | Set-Content evidence/runtime.txt
     node scripts/smoke.mjs
 
     docker create --name $zap --network "${project}_default" `
@@ -55,11 +57,9 @@ try {
         node scripts/monitor.mjs scrape-down
     }
     node scripts/monitor.mjs metrics
-    'Prometheus metrics and Grafana dashboard/query passed' | Add-Content evidence/runtime.txt
     if ($FailureFixture -eq 'Delivery') { docker compose stop receiver }
     docker compose stop app
     node scripts/monitor.mjs alert
-    'Prometheus firing, Alertmanager active, and delivered webhook verified' | Add-Content evidence/runtime.txt
     docker compose start app
     node scripts/smoke.mjs
     if ((docker inspect --format '{{.Image}}' (docker compose ps -q app)) -cne $ImageId) {
@@ -77,3 +77,9 @@ try {
         }
     }
 }
+
+@(
+    "Compose image ID $runningId"
+    'Prometheus metrics and Grafana dashboard/query passed'
+    'Prometheus firing, Alertmanager active, and delivered webhook verified'
+) | Set-Content evidence/runtime.txt
