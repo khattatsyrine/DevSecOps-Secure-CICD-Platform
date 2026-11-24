@@ -15,13 +15,13 @@ The project follows one Spring Boot image from a reviewed Git commit through bui
 | Compose, smoke checks and ZAP | Compose starts the same image in a disposable project. Smoke checks validate the HTTP contract and deny sensitive Actuator routes. ZAP passively checks responses to fixed GET requests on the disposable app. | Open the hosted runtime and ZAP artifacts. Point out the matching image ID, the passive scan scope and the Medium/High blocking threshold. |
 | Prometheus and Grafana | Prometheus scrapes Actuator. Grafana displays provisioned dashboards and queries the live Prometheus data source. | Open the Democyber dashboard and show the target, HTTP requests, and JVM metrics. Explain why a live query adds evidence beyond dashboard provisioning. |
 | Alertmanager and the receiver | Stopping the disposable app makes Prometheus fire `DemocyberDown`. Alertmanager routes the notification to a private test receiver. The runner checks the alert at each stage and restarts the app. | Show the receiver delivery line from a passing run. Use the delivery failure fixture from the demonstration matrix to show that a firing rule alone is insufficient. |
-| GHCR publish job | Protected-main verification exports the tested image. A separate job validates the archive hash, source commit and image ID before publishing and records the registry digest. | Show the publish prerequisites and archive checks in the workflow. Use the local archive round trip as evidence of identity preservation and label hosted publishing as pending. |
+| GHCR publish job | Protected-main verification exports the tested image. A separate job validates the archive hash, source commit and image ID before publishing and records the registry digest. | Show the publish prerequisites and archive checks in the workflow. Open the protected-main release metadata. Compare its commit and image ID with Verify and inspect the immutable GHCR digest. |
 
 ## Suggested demo order
 
 1. Start with the PR and hosted artifact. Identify the commit, the Trivy image ID, and the matching Compose image ID.
 2. Start the local stack using the README, then show the greeting and Grafana dashboard. Use the disposable verification command for the outage and recovery demonstration.
-3. Close by showing a negative test that actually failed and the publish conditions. Explain which prerequisites still block a real release.
+3. Close by showing a negative test that actually failed and the publish conditions. Compare the failed run with the successful protected-main publication and pull the verified image by digest.
 
 ## Script audit
 
@@ -46,12 +46,14 @@ Disposable Compose evidence now records success after the full run and cleanup. 
 - **Why upgrade to Spring Boot 4?** Trivy flagged two Spring MVC 6.2 findings after Jackson and Tomcat updates. The fixed public Framework line and supported Tomcat combination are available through Boot 4. The migration preserves the original endpoint contract.
 - **Why keep separate verification and publishing jobs?** Only the publisher gets package write access. Verification has repository read access and a scoped OIDC permission for Sonar. A failed Verify job blocks publishing.
 - **What does the ZAP result prove?** The application responded to the selected passive checks under the configured threshold. It is limited to those routes and passive rules.
-- **What remains before release?** The review run passed the enforced Sonar Quality Gate. GitHub returned HTTP 403 for protection on private `main`, and the GHCR opt-in variable is unset. The protected-main release and registry digest remain unverified. PR #2 remains unmerged.
+- **Why retain the GHCR opt-in?** It lets the maintainer pause publishing independently of branch protection and the mandatory checks. The switch is enabled for this repository.
 
 ### Evidence to have open
 
 - [PR #2 and commit history](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/pull/2)
 - [Gitleaks negative fixture](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45201899354)
 - [Spring Boot 4 scan, SBOM and runtime artifact](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45263551266/artifacts/14861528763)
-- [Hosted audit and Sonar Quality Gate](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45370932041)
+- [Protected-main Verify and GHCR publish](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45388579014)
+- [Verified release metadata](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45388579014/artifacts/14917898134)
+- [Quality Gate and startup rejection](https://github.com/khattatsyrine/DevSecOps-Secure-CICD-Platform/actions/runs/45389124122)
 - [Architecture](architecture.md), [demo matrix](demonstration.md) and [implementation status](IMPLEMENTATION_STATUS.md)
